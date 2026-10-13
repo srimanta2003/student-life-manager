@@ -1,0 +1,249 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Helper functions for entity validation
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 120 &&
+             (!('college' in data) || data.college == null || (data.college is string && data.college.size() <= 150)) &&
+             (!('course' in data) || data.course == null || (data.course is string && data.course.size() <= 100)) &&
+             (!('department' in data) || data.department == null || (data.department is string && data.department.size() <= 100)) &&
+             (!('currentSemester' in data) || data.currentSemester == null || (data.currentSemester is int && data.currentSemester >= 1 && data.currentSemester <= 12)) &&
+             (!('academicYear' in data) || data.academicYear == null || (data.academicYear is string && data.academicYear.size() <= 30)) &&
+             (!('targetAttendance' in data) || data.targetAttendance == null || (data.targetAttendance is int && data.targetAttendance >= 1 && data.targetAttendance <= 100)) &&
+             (!('themeMode' in data) || data.themeMode == null || data.themeMode in ['system', 'light', 'dark']) &&
+             (!('onboardingCompleted' in data) || data.onboardingCompleted == null || data.onboardingCompleted is bool) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidSubject(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.code is string && data.code.size() >= 1 && data.code.size() <= 30 &&
+             data.semester is int && data.semester >= 1 && data.semester <= 12 &&
+             data.credits is int && data.credits >= 0 && data.credits <= 30 &&
+             data.minAttendance is int && data.minAttendance >= 0 && data.minAttendance <= 100 &&
+             (!('facultyName' in data) || data.facultyName == null || (data.facultyName is string && data.facultyName.size() <= 100)) &&
+             (!('description' in data) || data.description == null || (data.description is string && data.description.size() <= 500)) &&
+             (!('colorHex' in data) || data.colorHex == null || (data.colorHex is string && data.colorHex.size() <= 16)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidAttendance(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.subjectId is string && isValidId(data.subjectId) &&
+             data.date is string && data.date.size() >= 8 && data.date.size() <= 12 &&
+             data.status in ['PRESENT', 'ABSENT', 'CANCELLED'] &&
+             data.sessionType in ['LECTURE', 'LAB', 'TUTORIAL'] &&
+             (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 250)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidAssignment(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.subjectId is string && isValidId(data.subjectId) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.dueDate is string && data.dueDate.size() >= 8 && data.dueDate.size() <= 12 &&
+             data.priority in ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] &&
+             data.status in ['NOT_STARTED', 'IN_PROGRESS', 'SUBMITTED', 'COMPLETED'] &&
+             (!('description' in data) || data.description == null || (data.description is string && data.description.size() <= 1000)) &&
+             (!('assignedDate' in data) || data.assignedDate == null || (data.assignedDate is string && data.assignedDate.size() <= 12)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidExam(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.subjectId is string && isValidId(data.subjectId) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.examDate is string && data.examDate.size() >= 8 && data.examDate.size() <= 12 &&
+             data.startTime is string && data.startTime.size() >= 3 && data.startTime.size() <= 10 &&
+             data.endTime is string && data.endTime.size() >= 3 && data.endTime.size() <= 10 &&
+             data.examType in ['INTERNAL', 'MID_SEM', 'END_SEM', 'PRACTICAL', 'VIVA', 'OTHER'] &&
+             (!('venue' in data) || data.venue == null || (data.venue is string && data.venue.size() <= 100)) &&
+             (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidStudyTask(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.date is string && data.date.size() >= 8 && data.date.size() <= 12 &&
+             data.targetMinutes is int && data.targetMinutes >= 0 && data.targetMinutes <= 1440 &&
+             data.completedMinutes is int && data.completedMinutes >= 0 && data.completedMinutes <= 1440 &&
+             data.isCompleted is bool &&
+             (!('subjectId' in data) || data.subjectId == null || (data.subjectId is string && data.subjectId.size() <= 128)) &&
+             (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidNote(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.content is string && data.content.size() <= 20000 &&
+             (!('subjectId' in data) || data.subjectId == null || (data.subjectId is string && data.subjectId.size() <= 128)) &&
+             (!('tags' in data) || data.tags == null || (data.tags is list && data.tags.size() <= 10)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidResult(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.semesterNumber is int && data.semesterNumber >= 1 && data.semesterNumber <= 12 &&
+             data.totalCredits is int && data.totalCredits >= 0 && data.totalCredits <= 100 &&
+             (data.sgpa is number || data.sgpa is int) && data.sgpa >= 0.0 && data.sgpa <= 10.0 &&
+             data.gradingScale in ['10_POINT', '4_POINT'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidSupportRequest(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.type in ['SUPPORT', 'FEEDBACK', 'BUG_REPORT'] &&
+             data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 150 &&
+             data.message is string && data.message.size() >= 1 && data.message.size() <= 2000 &&
+             (!('rating' in data) || data.rating == null || (data.rating is int && data.rating >= 1 && data.rating <= 5)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    // Match /users/{userId}
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming());
+      allow delete: if isOwner(userId);
+
+      // Subcollection: subjects
+      match /subjects/{subjectId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(subjectId) && isValidSubject(incoming());
+        allow update: if isOwner(userId) && isValidId(subjectId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidSubject(incoming());
+        allow delete: if isOwner(userId) && isValidId(subjectId);
+      }
+
+      // Subcollection: attendance
+      match /attendance/{attendanceId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(attendanceId) && isValidAttendance(incoming());
+        allow update: if isOwner(userId) && isValidId(attendanceId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidAttendance(incoming());
+        allow delete: if isOwner(userId) && isValidId(attendanceId);
+      }
+
+      // Subcollection: assignments
+      match /assignments/{assignmentId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(assignmentId) && isValidAssignment(incoming());
+        allow update: if isOwner(userId) && isValidId(assignmentId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidAssignment(incoming());
+        allow delete: if isOwner(userId) && isValidId(assignmentId);
+      }
+
+      // Subcollection: exams
+      match /exams/{examId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(examId) && isValidExam(incoming());
+        allow update: if isOwner(userId) && isValidId(examId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidExam(incoming());
+        allow delete: if isOwner(userId) && isValidId(examId);
+      }
+
+      // Subcollection: study_tasks
+      match /study_tasks/{taskId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(taskId) && isValidStudyTask(incoming());
+        allow update: if isOwner(userId) && isValidId(taskId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidStudyTask(incoming());
+        allow delete: if isOwner(userId) && isValidId(taskId);
+      }
+
+      // Subcollection: notes
+      match /notes/{noteId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(noteId) && isValidNote(incoming());
+        allow update: if isOwner(userId) && isValidId(noteId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidNote(incoming());
+        allow delete: if isOwner(userId) && isValidId(noteId);
+      }
+
+      // Subcollection: results
+      match /results/{resultId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(resultId) && isValidResult(incoming());
+        allow update: if isOwner(userId) && isValidId(resultId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidResult(incoming());
+        allow delete: if isOwner(userId) && isValidId(resultId);
+      }
+
+      // Subcollection: support_requests
+      match /support_requests/{requestId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(requestId) && isValidSupportRequest(incoming());
+        allow update: if isOwner(userId) && isValidId(requestId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidSupportRequest(incoming());
+        allow delete: if isOwner(userId) && isValidId(requestId);
+      }
+    }
+  }
+}

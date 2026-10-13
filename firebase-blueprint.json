@@ -1,0 +1,206 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile and academic institution settings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "college": { "type": "string" },
+        "course": { "type": "string" },
+        "department": { "type": "string" },
+        "currentSemester": { "type": "integer" },
+        "academicYear": { "type": "string" },
+        "targetAttendance": { "type": "integer" },
+        "themeMode": { "type": "string", "enum": ["system", "light", "dark"] },
+        "onboardingCompleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "fullName", "email", "createdAt"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "Academic course or subject enrolled by student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "semester": { "type": "integer" },
+        "credits": { "type": "integer" },
+        "facultyName": { "type": "string" },
+        "minAttendance": { "type": "integer" },
+        "description": { "type": "string" },
+        "colorHex": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "code", "semester", "credits", "minAttendance", "createdAt"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Daily lecture or lab attendance log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["PRESENT", "ABSENT", "CANCELLED"] },
+        "sessionType": { "type": "string", "enum": ["LECTURE", "LAB", "TUTORIAL"] },
+        "note": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subjectId", "date", "status", "sessionType", "createdAt"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Academic coursework or project deadline",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "assignedDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"] },
+        "status": { "type": "string", "enum": ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "COMPLETED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subjectId", "title", "dueDate", "priority", "status", "createdAt"]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Examination timetable slot and room details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "title": { "type": "string" },
+        "examDate": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "examType": { "type": "string", "enum": ["INTERNAL", "MID_SEM", "END_SEM", "PRACTICAL", "VIVA", "OTHER"] },
+        "venue": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subjectId", "title", "examDate", "startTime", "endTime", "examType", "createdAt"]
+    },
+    "StudyTask": {
+      "title": "StudyTask",
+      "description": "Study planner task with duration goal and Pomodoro tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "targetMinutes": { "type": "integer" },
+        "completedMinutes": { "type": "integer" },
+        "isCompleted": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "date", "targetMinutes", "completedMinutes", "isCompleted", "createdAt"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "Student subject revision note and document record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "content", "createdAt"]
+    },
+    "SemesterResult": {
+      "title": "SemesterResult",
+      "description": "Semester credit and SGPA score for CGPA calculations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "semesterNumber": { "type": "integer" },
+        "totalCredits": { "type": "integer" },
+        "sgpa": { "type": "number" },
+        "gradingScale": { "type": "string", "enum": ["10_POINT", "4_POINT"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "semesterNumber", "totalCredits", "sgpa", "gradingScale", "createdAt"]
+    },
+    "SupportRequest": {
+      "title": "SupportRequest",
+      "description": "Help center feedback or support submission",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["SUPPORT", "FEEDBACK", "BUG_REPORT"] },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "rating": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "type", "subject", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile and academic defaults"
+    },
+    "/users/{userId}/subjects/{subjectId}": {
+      "schema": "Subject",
+      "description": "Student academic subjects"
+    },
+    "/users/{userId}/attendance/{attendanceId}": {
+      "schema": "AttendanceRecord",
+      "description": "Class attendance records"
+    },
+    "/users/{userId}/assignments/{assignmentId}": {
+      "schema": "Assignment",
+      "description": "Coursework and project assignments"
+    },
+    "/users/{userId}/exams/{examId}": {
+      "schema": "Exam",
+      "description": "Scheduled exam slots"
+    },
+    "/users/{userId}/study_tasks/{taskId}": {
+      "schema": "StudyTask",
+      "description": "Study planner tasks and sessions"
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "Notes and study documents"
+    },
+    "/users/{userId}/results/{resultId}": {
+      "schema": "SemesterResult",
+      "description": "Semester SGPA and credit results"
+    },
+    "/users/{userId}/support_requests/{requestId}": {
+      "schema": "SupportRequest",
+      "description": "Student feedback and support tickets"
+    }
+  }
+}

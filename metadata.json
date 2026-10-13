@@ -1,0 +1,6 @@
+{
+  "name": "Student Life Manager",
+  "description": "Centralized academic management platform for students with attendance tracking, assignments, exams, study planner, CGPA calculator, and Gemini assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
